@@ -82,4 +82,90 @@ function sams_integration_register_sams_host_config_cpt() {
 
 add_action('init', 'sams_integration_register_sams_host_config_cpt');
 
+function sams_integration_register_sams_host_config_metaboxes() {
+	add_meta_box(
+		'sams_host_config_details',
+		'Host-Details',
+		'sams_integration_render_sams_host_config_metabox',
+		'sams_host_config',
+		'normal',
+		'default'
+	);
+}
+add_action('add_meta_boxes', 'sams_integration_register_sams_host_config_metaboxes');
+
+function sams_integration_render_sams_host_config_metabox($post) {
+	// Aktuelle Werte laden
+	$url = get_post_meta($post->ID, '_sams_host_config_url', true);
+	$api_key = get_post_meta($post->ID, '_sams_host_config_api_key', true);
+
+	// Nonce-Feld für Sicherheit
+	wp_nonce_field('sams_integration_save_sams_host_config_metabox', 'sams_host_config_nonce');
+
+	// HTML für die Metabox
+	echo '<div style="display: flex; flex-direction: column; gap: 10px;">';
+	echo '<label for="sams_host_config_url">URL:</label>';
+	echo '<input type="url" name="sams_host_config_url" id="sams_host_config_url" value="' . esc_attr($url) . '" style="width: 100%;" />';
+
+	echo '<label for="sams_host_config_api_key">API-Key:</label>';
+	echo '<input type="text" name="sams_host_config_api_key" id="sams_host_config_api_key" value="' . esc_attr($api_key) . '" style="width: 100%;" />';
+	echo '</div>';
+}
+
+function sams_integration_save_sams_host_config_metabox($post_id) {
+	// Überprüfe Nonce und Berechtigungen
+	if (!isset($_POST['sams_host_config_nonce']) || !wp_verify_nonce($_POST['sams_host_config_nonce'], 'sams_integration_save_sams_host_config_metabox')) {
+		return;
+	}
+	if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
+	if (!current_user_can('edit_post', $post_id)) return;
+
+	// Speichere URL
+	if (isset($_POST['sams_host_config_url'])) {
+		update_post_meta($post_id, '_sams_host_config_url', sanitize_text_field($_POST['sams_host_config_url']));
+	}
+
+	// Speichere API-Key
+	if (isset($_POST['sams_host_config_api_key'])) {
+		update_post_meta($post_id, '_sams_host_config_api_key', sanitize_text_field($_POST['sams_host_config_api_key']));
+	}
+}
+add_action('save_post', 'sams_integration_save_sams_host_config_metabox');
+
+// Spalten hinzufügen
+function sams_integration_add_sams_host_config_columns($columns) {
+	$columns['sams_host_config_url'] = 'URL';
+	$columns['sams_host_config_api_key'] = 'API-Key';
+	return $columns;
+}
+add_filter('manage_sams_host_config_posts_columns', 'sams_integration_add_sams_host_config_columns');
+
+// Spalteninhalt füllen
+function sams_integration_fill_sams_host_config_columns($column, $post_id) {
+	if ($column === 'sams_host_config_url') {
+		echo esc_html(get_post_meta($post_id, '_sams_host_config_url', true));
+	}
+	if ($column === 'sams_host_config_api_key') {
+		echo esc_html(substr(get_post_meta($post_id, '_sams_host_config_api_key', true), 0, 10) . '...'); // Nur ein Ausschnitt des API-Keys
+	}
+}
+add_action('manage_sams_host_config_posts_custom_column', 'sams_integration_fill_sams_host_config_columns', 10, 2);
+
+
+function sams_integration_register_sams_host_config_rest_fields() {
+	register_rest_field('sams_host_config', 'url', [
+		'get_callback' => function($post) {
+			return get_post_meta($post['id'], '_sams_host_config', true);
+		},
+	]);
+	register_rest_field('sams_host_config', 'api_key', [
+		'get_callback' => function($post) {
+			return get_post_meta($post['id'], '_sams_host_config_api_key', true);
+		},
+	]);
+}
+add_action('rest_api_init', 'sams_integration_register_sams_host_config_rest_fields');
+
+
+
 
