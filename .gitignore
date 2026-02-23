@@ -1,6 +1,12 @@
 # Created by https://www.toptal.com/developers/gitignore/api/composer,node,phpunit
 # Edit at https://www.toptal.com/developers/gitignore?templates=composer,node,phpunit
 
+# Release folder #
+release-plugin-directory/*
+
+# local wordpress db #
+wordpress/db
+
 ### Composer ###
 composer.phar
 /vendor/
