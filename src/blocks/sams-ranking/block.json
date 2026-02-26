@@ -12,10 +12,7 @@
 		"html": false
 	},
 	"attributes": {
-		"apiKey": {
-			"type": "string"
-		},
-		"associationUrl": {
+		"samsConfigId": {
 			"type": "string"
 		},
 		"matchSeriesId": {
