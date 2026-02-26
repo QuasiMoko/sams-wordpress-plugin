@@ -13,7 +13,7 @@ use SAMSPlugin\RankingFetcher;
 if (isset($attributes)
 	&& isset($attributes['samsConfigId'])
 	&& isset($attributes['matchSeriesId'])) {
-	// Hole die SAMSHostConfig anhand der ID
+
 	$config_post = get_post($attributes['samsConfigId']);
 
 	if ($config_post) {
@@ -23,7 +23,10 @@ if (isset($attributes)
 
 		// Fetch the ranking data using the fetched configuration
 		$fetcher = new RankingFetcher();
-		$ranking = $fetcher->fetch($associationUrl, $apiKey, $matchSeriesId, noCache: true);
+		$ranking = $fetcher->fetch(
+			baseUrl: $associationUrl,
+			apiKey: $apiKey,
+			matchSeriesId: $matchSeriesId);
 
 		$template_path = sams_integration_get_template( 'ranking-template.php' );
 
