@@ -11,23 +11,29 @@ use SAMSPlugin\FixturesFetcher;
 <?php
 
 if (isset($attributes)
-	&& isset($attributes['apiKey'])
-	&& isset($attributes['associationUrl'])
+	&& isset($attributes['samsConfigId'])
 	&& isset($attributes['matchSeriesId'])
 	&& isset($attributes['teamId'])) {
 
-	$fetcher = new FixturesFetcher();
-	$fixtures = $fetcher->fetch(
-		$attributes['associationUrl'],
-		$attributes['apiKey'],
-		$attributes['matchSeriesId'],
-		$attributes['teamId']);
-	
-	$template_path = sams_integration_get_template( 'fixtures-template.php' );
+	$config_post = get_post($attributes['samsConfigId']);
 
-	if (file_exists($template_path)) {
-		$sams_integration_fixtures = $fixtures;
-		include $template_path;
+	if ($config_post) {
+		$associationUrl = get_post_meta($config_post->ID, '_sams_host_config_url', true);
+		$apiKey = get_post_meta($config_post->ID, '_sams_host_config_api_key', true);	
+
+		$fetcher = new FixturesFetcher();
+		$fixtures = $fetcher->fetch(
+			$associationUrl,
+			$apiKey,
+			$attributes['matchSeriesId'],
+			$attributes['teamId']);
+		
+		$template_path = sams_integration_get_template( 'fixtures-template.php' );
+
+		if (file_exists($template_path)) {
+			$sams_integration_fixtures = $fixtures;
+			include $template_path;
+		}
 	}
 
 } else {
