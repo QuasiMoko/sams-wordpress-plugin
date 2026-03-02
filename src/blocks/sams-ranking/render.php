@@ -11,18 +11,31 @@ use SAMSPlugin\RankingFetcher;
 <?php
 
 if (isset($attributes)
-	&& isset($attributes['apiKey'])
-	&& isset($attributes['associationUrl'])
+	&& isset($attributes['samsConfigId'])
 	&& isset($attributes['matchSeriesId'])) {
 
-	$fetcher = new RankingFetcher();
-	$ranking = $fetcher->fetch($attributes['associationUrl'], $attributes['apiKey'], $attributes['matchSeriesId']);
+	$config_post = get_post($attributes['samsConfigId']);
 
-	$template_path = sams_integration_get_template( 'ranking-template.php' );
+	if ($config_post) {
+		$associationUrl = get_post_meta($config_post->ID, '_sams_host_config_url', true);
+		$apiKey = get_post_meta($config_post->ID, '_sams_host_config_api_key', true);
+		$matchSeriesId = $attributes['matchSeriesId'];
 
-	if (file_exists($template_path)) {
-		$sams_integration_ranking = $ranking;
-		include $template_path;
+		// Fetch the ranking data using the fetched configuration
+		$fetcher = new RankingFetcher();
+		$ranking = $fetcher->fetch(
+			baseUrl: $associationUrl,
+			apiKey: $apiKey,
+			matchSeriesId: $matchSeriesId);
+
+		$template_path = sams_integration_get_template( 'ranking-template.php' );
+
+		if (file_exists($template_path)) {
+			$sams_integration_ranking = $ranking;
+			include $template_path;
+		}
+	} else {
+		esc_html_e('Error in SAMS Ranking: Configuration not found', 'sams-integration');
 	}
 
 } else {

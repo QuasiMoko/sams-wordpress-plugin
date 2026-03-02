@@ -47,3 +47,4 @@ function sams_integration_get_template( $template_name ) {
     }
 }
 
+SAMSPlugin\Base\SAMSHostConfig\Initializer::init();

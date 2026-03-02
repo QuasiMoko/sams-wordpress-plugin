@@ -14,6 +14,7 @@ import { __ } from '@wordpress/i18n';
 import { InspectorControls, useBlockProps } from '@wordpress/block-editor';
 
 import { PanelBody, TextControl } from '@wordpress/components';
+import { useSelect } from '@wordpress/data';
 
 /**
  * Lets webpack process CSS, SASS or SCSS files referenced in JavaScript files.
@@ -33,31 +34,36 @@ import './editor.scss';
  */
 export default function Edit( { attributes, setAttributes } )
 {
-	const { associationUrl, apiKey, matchSeriesId, teamId } = attributes;
+	const { samsConfigId, matchSeriesId, teamId } = attributes;
+	const configs = useSelect(
+		(select) => select('core').getEntityRecords('postType', 'sams_host_config', { per_page: 100 }),
+		[]
+	);
+	const selectedConfig = configs && samsConfigId ? configs.find(config => config.id == samsConfigId) : null;
+
 	return (
         <>
             <InspectorControls>
                 <PanelBody title={ __( 'Settings', 'sams-integration' ) }>
-					<TextControl
-						label={ __(
-							'Association URL',
-							'sams-integration'
-						) }
-						value={ associationUrl || '' }
-                        onChange={ ( value ) =>
-                        	setAttributes( { associationUrl: value } )
-						}
-					/>
-					<TextControl
-						label={ __(
-							'API Key',
-							'sams-integration'
-						) }
-						value={ apiKey || '' }
-                        onChange={ ( value ) =>
-                        	setAttributes( { apiKey: value } )
-						}
-					/>
+				{ !configs ? (
+					<p>{ __('Loading ...', 'sams-integration') }</p>
+				) : (
+					<select
+						value={ samsConfigId || '' }
+						onChange={ e => {
+							setAttributes({
+								samsConfigId: e.target.value,
+							});
+						}}
+					>
+						<option value="">{ __('Select SAMS Server', 'sams-integration') }</option>
+						{ configs.map(config => (
+							<option key={config.id} value={config.id}>
+								{config.title?.rendered || config.id}
+							</option>
+						)) }
+					</select>
+				)}
 					<TextControl
 						label={ __(
 							'MatchSeriesId',
@@ -81,7 +87,13 @@ export default function Edit( { attributes, setAttributes } )
 					/>
                 </PanelBody>
             </InspectorControls>
-            <p { ...useBlockProps() }>SAMS Fixtures {  associationUrl }</p>
+			<p { ...useBlockProps() }>
+			SAMS Fixtures Vorschau:<br />
+			{ __('Config:', 'sams-integration') } { selectedConfig ? (selectedConfig.title?.rendered || selectedConfig.id) : __('None selected', 'sams-integration') }<br />
+			{ __('MatchSeriesId:', 'sams-integration') } { matchSeriesId || __('None', 'sams-integration') }<br />
+			{ __('TeamId:', 'sams-integration') } { teamId || __('None', 'sams-integration') }
+		</p>
+
         </>
     );
 }
